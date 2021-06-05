@@ -21,7 +21,7 @@ import os
 import subprocess
 import validators 
 import apacheconfig
-import mysql.connector
+import mariadb
 """
     Tâches à effectuer : 
         - lire le nom et dns du serveur wordpress
@@ -47,25 +47,6 @@ SERVER_NAME = "wordpress.local"
 SERVER_ADMIN = "mail@mail"
 
 #Configuration du fichier de log
-
-#A SUPPRIMER
-"""
-commande_bash = "[[ ! -z \"`mysql -qfsBe \"SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME='wordpress'\" 2>&1`\"]]"
-commande_mysql = "mysql -qfsBe \"SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME='wordpress'\""
-print(commande_mysql)
-
-
-subprocess.Popen(['/bin/bash', '-c', commande_mysql])
-"""
-client = mysql.connector.connect(host = "localhost",
-                                 user = "root",
-                                 passwd = "OpenClassrooms21")
-
-mycursor = client.cursor()
-mycursor.execute("SHOW DATABASES")
-for x in mycursor:
-    print(x[0])
-
 
 try:
     logging.basicConfig(filename=LOG_FILE, format="%(asctime)s : %(levelname)s:%(message)s",
@@ -102,7 +83,7 @@ except Exception as e:
     logging.error("Echec de la lecture des informations utilisateur")
     logging.error(e)
     raise e
-# MISE EN ATTENTE DE CETTE FONCTION
+
 #Création du fichier /etc/apache2/sites-available/wp.conf
 
 try:
@@ -130,6 +111,7 @@ try:
 
     with open("/etc/apache2/sites-available/wp.conf", "w") as apache_file:
         apache_file.writelines(apache_conf)
+        logging.info("Le fichier /etc/apache2/sites-available/wp.conf a été créé avec succès")
 
 except Exception as e:
     logging.error("Echec de la création du fichier wp.conf")
@@ -142,6 +124,7 @@ try:
     os.system("a2dissite 000-default")
     os.system("a2ensite wp")
     os.system("systemctl reload apache2")
+    logging.info("La configuration apache a été rechargée avec succès")
 
 except Exception as e:
     logging.error("Echec du chargement de la nouvelle configuration Apache")
@@ -163,41 +146,65 @@ try:
     
     with open("/etc/wordpress/config-{}.php".format(SERVER_NAME), "w") as config_file_php:
         config_file_php.writelines(php_conf)
+        logging.info("Le fichier /etc/wordpress/config-{}.php a été créé avec succès".format(SERVER_NAME))
 
 except Exception as e:
     logging.error("Echec de la création du fichier de configuration php")
     logging.error(e)
     raise e 
 
-#FIN DE MISE EN ATTENTE
 
-#Création du fichier SQL wp.sql et création de la base dans MariaDB
+#Création de la base dans MariaDB
+
+#Définition d'une fonction qui crée/remplace une base de donnée dans mariadb
+def creation_base(dico_base):
+    try:
+        with mariadb.connect(host = "localhost",
+                user = "root",
+                passwd = "OpenClassrooms21") as client_db:
+            sql_create_cmd = "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER ON {}.* TO {}@{} IDENTIFIED BY '{}'".format(dico_base["DB_NAME"], dico_base["DB_USER"], dico_base["DB_HOST"], dico_base["DB_PASSWORD"])
+
+            curseur_db = client_db.cursor()
+            curseur_db.execute("DROP DATABASE IF EXISTS {}".format(dico_base["DB_NAME"]))
+            curseur_db.execute("CREATE DATABASE {}".format(dico_base["DB_NAME"]))
+            curseur_db.execute(sql_create_cmd)
+            curseur_db.execute("FLUSH PRIVILEGES")
+    
+    except Exception as e:
+        logging.error("Echec de la création de la base de données SQL dans MariaDB")
+        raise e
 
 try:
-    mariadb_conf = [
-            "CREATE DATABASE {};\n".format(DB_NAME),
-            "GRANT SELECT,INSERT,UPDATE,DELETE,CREATE,DROP,ALTER\n",
-            "ON {}.*\n".format(DB_NAME),
-            "TO {}@{}\n".format(DB_USER, DB_HOST),
-            "IDENTIFIED BY '{}';\n".format(DB_PASSWORD),
-            "FLUSH PRIVILEGES;\n",
-            ]
-    
-    with open("/root/wp.sql", "w") as config_file_mariadb:
-        config_file_mariadb.writelines(mariadb_conf)
+    sql_identifiants = {"DB_NAME": DB_NAME, "DB_USER": DB_USER, "DB_HOST": DB_HOST, "DB_PASSWORD": DB_PASSWORD}
         
-#        if os.system(
-#                "[[ ! -z \"`mysql -qfsBe \"SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME='wordpress'\" 2>&1`\"]]"):
-#            print("Creation base OK")
-#        else:
-#            print("Echec de la création de la base")
-    exit(0)
+    client_db = mariadb.connect(host = "localhost",
+                                user = "root",
+                                passwd = "OpenClassrooms21")
 
-#    if os.system("mysql --defaults-extra-file=/etc/mysql/debian.cnf < /root/wp.sql"):
+    curseur_db = client_db.cursor()
+    curseur_db.execute("SHOW DATABASES")
+    for x in curseur_db:
+
+        if x[0] == DB_NAME:
+            print("La base {} existe déjà, souhaitez-vous continuer quand même et écraser la base existante ? [O/Y]/n".format(
+                x[0]))
+            choix_erreur_db = input("") or "O"
+            print(choix_erreur_db) 
+            if choix_erreur_db == "O" or choix_erreur_db == "Y":
+                client_db.close()
+                print("OK on est des fous on supprime tout !")
+                logging.info("La base '{}' existe déjà, elle va être réinitialisée".format(DB_NAME))
+                creation_base(sql_identifiants)
+                logging.info("La base '{}' a été réinitialisée".format(DB_NAME))
+            else:
+                print("Echec de création de la base, la base existe déjà.")
+                logging.error("Echec de la création de la base SQL, la base existe déjà.")
+                exit(os.EX_SOFTWARE)
+
+        else:
+            pass
 
 except Exception as e:
     logging.error("Echec de la création de la base de donnée SQL dans MariaDB")
     logging.error(e)
     raise e   
-
-
