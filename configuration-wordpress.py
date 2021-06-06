@@ -85,7 +85,7 @@ except Exception as e:
 #Création du fichier /etc/apache2/sites-available/'server_name'.conf
 
 try:
-
+    #Représentation du contenu du fichier sous forme de liste
     apache_conf = [
         "<VirtualHost *:80>\n",
         "\tServerName {}\n".format(server_name),
@@ -132,6 +132,7 @@ except Exception as e:
 #Création du fichier PHP /etc/wordpress/config-server_name.php
 
 try:
+    #Représentation du contenu du fichier sous forme de liste
     php_conf = [
             "<?php\n",
             "define('DB_NAME','{}');\n".format(db_name),
@@ -139,6 +140,7 @@ try:
             "define('DB_PASSWORD','{}');\n".format(db_password),
             "define('DB_HOST','{}');\n".format(db_host),
             "define('WP_CONTENT_DIR','{}');\n".format(WP_CONTENT_DIR),
+            "define('FS_METHOD','direct');\n",
             "?>\n"
             ]
     
@@ -155,7 +157,6 @@ except Exception as e:
 #Création de la base dans MariaDB
 
 #Définition d'une fonction qui indique l'existance d'une base de donnée dans mariadb
-
 def existe_base(nom_base, identifiants):
     try:
         with mariadb.connect(host = identifiants["host"],
@@ -204,7 +205,7 @@ try:
 
     if existe_base(db_name, MARIADB_ID):
         print("La base {} existe déjà, souhaitez-vous continuer quand même et écraser la base existante ? [O/Y]/n".format(
-                x[0]))
+            db_name))
         choix_erreur_db = input("") or "O"
         print(choix_erreur_db) 
         if choix_erreur_db == "O" or choix_erreur_db == "Y":
@@ -244,6 +245,7 @@ except Exception as e:
     raise e
 #Configuration d'Apache pour HTTPS
 try:
+    #Représentation du contenu du fichier sous forme de liste
     apache_https_conf = [
             "<IfModule mod_ssl.c>\n",
             "<VirtualHost *:443>\n",
