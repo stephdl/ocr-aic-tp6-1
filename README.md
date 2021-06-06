@@ -10,10 +10,15 @@ L'objectif demandé est de produire du code python permettant l'automatisation d
 
 Ici l'ensemble des scripts permet d'installer un serveur Wordpress sur une base LAMP dans un environnement Debian 10 et de configurer le https à l'aide d'un certificat auto-signé.
 
+### installation-prerequis.py
 Le premier script "installation-prerequis.py" comme son nom l'indique sert à installer les différents paquets nécessaires au bon fonctionnement du script ainsi que la base LAMP.
 
-Le deuxième script "configuration-wordpress.py" sert à configurer la base MariaDB et produire les fichiers de conf apache et wordpress. Les différents identifiants et mots de passe sont saisis par l'utilisateur durant l'exécution du script.
+### configuration-https.py
+Le deuxième script "configuration-https.py" sert à préparer https dans apache.
+Il génère un groupe Diffie Hellmann si celui-ci n'existe pas et crée également un fichier de configuration apache pour SSL
 
-Le troisième script "configuration-https.py" sert à configurer le protocole https dans apache et à générer les différents certificats.
+### configuration-wordpress.py
+Le troisième script "configuration-wordpress.py" sert à configurer la base MariaDB et produire les fichiers de conf apache et wordpress. Les différents identifiants et mots de passe sont saisis par l'utilisateur durant l'exécution du script.
+
 
 
