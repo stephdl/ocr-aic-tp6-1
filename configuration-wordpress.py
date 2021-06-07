@@ -20,7 +20,6 @@ import logging
 import os
 import subprocess
 import validators 
-import apacheconfig
 import mariadb
 
 """
@@ -120,7 +119,7 @@ except Exception as e:
 
 try:
     os.system("a2dissite 000-default")
-    os.system("a2ensite wp")
+    os.system("a2ensite {}".format(server_name))
     os.system("systemctl reload apache2")
     logging.info("La configuration apache a été rechargée avec succès")
 
