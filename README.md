@@ -16,13 +16,17 @@ Le choix de garder un certificat auto-signé et de ne pas utiliser d'outils comm
 
 ### installation-prerequis.py
 Le premier script "installation-prerequis.py" comme son nom l'indique sert à installer les différents paquets nécessaires au bon fonctionnement du script ainsi que la base LAMP.
+Ce script se termine par l'exécution de la commande "mysql_secure_connexion" qui va demander d'effectuer des choix sur la configuration MariaDB, notamment de modifier ou non le mot de passe root de la base.
 
 ### configuration-https.py
 Le deuxième script "configuration-https.py" sert à préparer https dans apache.
-Il génère un groupe Diffie Hellmann si celui-ci n'existe pas et crée également un fichier de configuration apache pour SSL
+Il génère un groupe Diffie Hellmann si celui-ci n'existe pas et crée également un fichier de configuration apache pour SSL.
 
 ### configuration-wordpress.py
 Le troisième script "configuration-wordpress.py" sert à configurer la base MariaDB et produire les fichiers de conf apache et wordpress. Les différents identifiants et mots de passe sont saisis par l'utilisateur durant l'exécution du script.
+
+### full-install.py
+Ce dernier script rassemble l'exécution des trois scripts précédents pour n'avoir qu'une seule commande à lancer
 
 ### Logs
 Chaque script crée son propre fichier de log éponyme à la racine du projet.
