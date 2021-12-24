@@ -10,7 +10,7 @@
     Date    :   2021-05-17
 
     Testé avec Python 3.7 sous Debian 10 (Buster) stable
-    forked by stephdl
+    forked by stephdl 24/12/21
 
 
 """
